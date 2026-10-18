@@ -1,0 +1,24 @@
+{
+  "sequence": "2011_09_26_drive_0005",
+  "frames": 154,
+  "bin": "2011_09_26_drive_0005.bin",
+  "bin_bytes": 158216,
+  "depth_source": "cnn",
+  "cnn_model": "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf",
+  "cnn_input_hw": [
+    518,
+    1708
+  ],
+  "cnn_mean_infer_s": 10.149415957166793,
+  "vo_failures": 0,
+  "vo_inliers_mean": 141.09150326797385,
+  "obs_per_frame_mean": 47.688311688311686,
+  "gt_path_length_m": 69.40397557899817,
+  "cnn_depth_vs_lidar": {
+    "abs_rel": 0.12236822536215186,
+    "rmse": 3.3441737592220306,
+    "delta1": 0.844871776526607,
+    "median_ratio": 1.019770286977291,
+    "n": 18974.1875
+  }
+}

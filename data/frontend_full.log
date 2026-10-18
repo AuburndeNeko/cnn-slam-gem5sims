@@ -1,0 +1,42 @@
+[frontend] 2011_09_26_drive_0005: 154 frames, 1242x375, fx=721.54 cx=609.56 cy=172.85
+[frontend] frame    0/154  tracks=250  vo_inliers=  0  obs= 0  (0s)
+[frontend] frame   10/154  tracks=250  vo_inliers=171  obs=48  (1s)
+[frontend] frame   20/154  tracks=250  vo_inliers=171  obs=48  (1s)
+[frontend] frame   30/154  tracks=250  vo_inliers=208  obs=48  (1s)
+[frontend] frame   40/154  tracks=250  vo_inliers=165  obs=48  (2s)
+[frontend] frame   50/154  tracks=250  vo_inliers=155  obs=48  (2s)
+[frontend] frame   60/154  tracks=250  vo_inliers=156  obs=48  (22s)
+[frontend] frame   70/154  tracks=250  vo_inliers=181  obs=48  (126s)
+[frontend] frame   80/154  tracks=250  vo_inliers=160  obs=48  (222s)
+[frontend] frame   90/154  tracks=250  vo_inliers=112  obs=48  (321s)
+[frontend] frame  100/154  tracks=250  vo_inliers=104  obs=48  (425s)
+[frontend] frame  110/154  tracks=250  vo_inliers= 78  obs=48  (564s)
+[frontend] frame  120/154  tracks=250  vo_inliers=102  obs=48  (666s)
+[frontend] frame  130/154  tracks=250  vo_inliers=102  obs=48  (762s)
+[frontend] frame  140/154  tracks=250  vo_inliers= 91  obs=48  (858s)
+[frontend] frame  150/154  tracks=250  vo_inliers=100  obs=48  (955s)
+[frontend] frame  153/154  tracks=250  vo_inliers=105  obs=48  (983s)
+{
+  "sequence": "2011_09_26_drive_0005",
+  "frames": 154,
+  "bin": "2011_09_26_drive_0005.bin",
+  "bin_bytes": 158216,
+  "depth_source": "cnn",
+  "cnn_model": "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf",
+  "cnn_input_hw": [
+    518,
+    1708
+  ],
+  "cnn_mean_infer_s": 10.149415957166793,
+  "vo_failures": 0,
+  "vo_inliers_mean": 141.09150326797385,
+  "obs_per_frame_mean": 47.688311688311686,
+  "gt_path_length_m": 69.40397557899817,
+  "cnn_depth_vs_lidar": {
+    "abs_rel": 0.12236822536215186,
+    "rmse": 3.3441737592220306,
+    "delta1": 0.844871776526607,
+    "median_ratio": 1.019770286977291,
+    "n": 18974.1875
+  }
+}
