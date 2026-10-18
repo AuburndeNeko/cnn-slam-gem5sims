@@ -6,3 +6,6 @@ slam
 slam_mc
 *_arm64
 .DS_Store
+Archive/visual-odometry-KITTI/
+.idea/
+__pycache__/

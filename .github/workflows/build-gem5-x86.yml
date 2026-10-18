@@ -31,6 +31,7 @@ jobs:
         run: |
           CFG=build/ARM/gem5.build/config
           scons defconfig build/ARM build_opts/ARM
+          scons setconfig build/ARM USE_KVM=n
           echo "---- Ruby / protocol / KVM settings ----"
           grep -E "RUBY|KVM" "$CFG" || true
           grep -qE "^(CONFIG_)?RUBY_PROTOCOL_CHI=y" "$CFG" \
