@@ -1,0 +1,61 @@
+# .github/workflows/build-gem5-x86.yml
+# Builds gem5 v25.1.0.0 (ARM ISA, Ruby + CHI) on an x86_64 Linux runner.
+# Same host/target situation as the Intel Mac build: x86 host, ARM target,
+# so gem5's ARM KVM code is not built at all.
+name: Build gem5 on x86 host (ARM, Ruby CHI)
+
+on:
+  workflow_dispatch:   # run manually from the Actions tab
+
+permissions:
+  contents: write      # needed to create the release
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    steps:
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git m4 scons zlib1g-dev \
+            libprotobuf-dev protobuf-compiler libprotoc-dev \
+            libgoogle-perftools-dev python3-dev pkg-config \
+            libpng-dev libhdf5-serial-dev libelf-dev
+
+      - name: Clone gem5 v25.1.0.0
+        run: git clone --depth 1 --branch v25.1.0.0 https://github.com/gem5/gem5.git
+
+      - name: Configure (ARM, Ruby, CHI) and verify
+        working-directory: gem5
+        run: |
+          CFG=build/ARM/gem5.build/config
+          scons defconfig build/ARM build_opts/ARM
+          echo "---- Ruby / protocol / KVM settings ----"
+          grep -E "RUBY|KVM" "$CFG" || true
+          grep -qE "^(CONFIG_)?RUBY_PROTOCOL_CHI=y" "$CFG" \
+            || { echo "CHI protocol not enabled, stopping"; exit 1; }
+          if grep -qE "^(CONFIG_)?USE_KVM=y" "$CFG"; then
+            echo "KVM unexpectedly enabled, stopping before the long build"; exit 1
+          fi
+
+      - name: Build gem5.opt
+        working-directory: gem5
+        run: scons build/ARM/gem5.opt -j$(nproc)
+
+      - name: Smoke test
+        working-directory: gem5
+        run: |
+          ./build/ARM/gem5.opt --help > /tmp/gem5_help.txt
+          head -n 5 /tmp/gem5_help.txt
+
+      - name: Publish as release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp gem5/LICENSE gem5/build/ARM/LICENSE-gem5
+          tar czf gem5-x86host-chi.tar.gz -C gem5/build/ARM gem5.opt LICENSE-gem5
+          gh release create gem5-v25.1-x86-host gem5-x86host-chi.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "gem5 v25.1.0.0 ARM (Ruby CHI), linux-x86_64 host" \
+            --notes "Built by build-gem5-x86.yml"
