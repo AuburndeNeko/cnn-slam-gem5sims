@@ -1,0 +1,120 @@
+# .github/workflows/sims-round1.yml
+# Round 1: verify the GitHub gem5 build against the Mac baseline, and test whether
+# pthreads work in SE mode on a Linux host. Four tests run in parallel.
+name: gem5 sims round 1 (baseline + thread tests)
+
+on:
+  workflow_dispatch:   # run manually from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  sim:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    strategy:
+      fail-fast: false        # one failing test does not cancel the others
+      matrix:
+        test:
+          - baseline_ekf_1core_mesh
+          - threads_glibc2004_classic
+          - threads_glibc2204_classic
+          - testB_mc_2cpu_mesh
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gem5 runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libprotobuf-dev libgoogle-perftools-dev \
+            python3-dev libpng-dev libhdf5-serial-dev zlib1g-dev
+
+      - name: Get gem5 configs (v25.1.0.0) and prebuilt gem5.opt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 --branch v25.1.0.0 https://github.com/gem5/gem5.git
+          gh release download gem5-v25.1-x86-host -p 'gem5-x86host-chi.tar.gz' \
+            --repo "$GITHUB_REPOSITORY"
+          mkdir -p gem5/build/ARM
+          tar xzf gem5-x86host-chi.tar.gz -C gem5/build/ARM
+          ls -lh gem5/build/ARM
+
+      - name: Build project ARM binaries (Makefile, Docker Ubuntu 20.04)
+        if: ${{ !startsWith(matrix.test, 'threads') }}
+        run: make slam_arm64 slam_mc_arm64
+
+      - name: Build gem5 threads test (glibc 20.04 and 22.04)
+        if: ${{ startsWith(matrix.test, 'threads') }}
+        run: |
+          SRC=$(find gem5/tests/test-progs/threads -name '*.cpp' | head -n 1)
+          echo "threads test source: $SRC"
+          test -n "$SRC" || { echo "threads test source not found"; exit 1; }
+          for v in 20.04 22.04; do
+            tag=${v/./}
+            docker run --rm -v "$PWD":/w -w /w -e DEBIAN_FRONTEND=noninteractive ubuntu:$v bash -c \
+              "apt-get update -qq && apt-get install -y -qq g++-aarch64-linux-gnu > /dev/null && \
+               aarch64-linux-gnu-g++ -O2 -static -pthread $SRC -o threads_arm64_$tag"
+          done
+          ls -lh threads_arm64_*
+
+      - name: Run simulation
+        working-directory: gem5
+        run: |
+          P=$GITHUB_WORKSPACE
+          MESH=configs/example/noc_config/2x4.py
+          SE=configs/deprecated/example/se.py
+          RUBY="--ruby --network=garnet --topology=CustomMesh --chi-config=$MESH"
+          OUT=m5out/${{ matrix.test }}
+          mkdir -p "$OUT"
+          set +e
+          case "${{ matrix.test }}" in
+            baseline_ekf_1core_mesh)
+              timeout 75m ./build/ARM/gem5.opt -re -d "$OUT" $SE \
+                --cpu-type=ArmMinorCPU --num-cpus=1 $RUBY --maxtime=0.05 \
+                --cmd=$P/slam_arm64 \
+                --options="--data $P/data/2011_09_26_drive_0005.bin --filter ekf --frames 20 --out $P/data/ekf_gem5.txt"
+              ;;
+            threads_glibc2004_classic)
+              timeout 30m ./build/ARM/gem5.opt -re -d "$OUT" $SE \
+                --cpu-type=ArmMinorCPU --num-cpus=4 --caches --maxtime=0.05 \
+                --cmd=$P/threads_arm64_2004
+              ;;
+            threads_glibc2204_classic)
+              timeout 30m ./build/ARM/gem5.opt -re -d "$OUT" $SE \
+                --cpu-type=ArmMinorCPU --num-cpus=4 --caches --maxtime=0.05 \
+                --cmd=$P/threads_arm64_2204
+              ;;
+            testB_mc_2cpu_mesh)
+              timeout 60m ./build/ARM/gem5.opt -re -d "$OUT" $SE \
+                --cpu-type=ArmMinorCPU --num-cpus=2 $RUBY --maxtime=0.05 \
+                --cmd=$P/slam_mc_arm64 \
+                --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads 1 --frames 1 --ds 2"
+              ;;
+          esac
+          CODE=$?
+          echo "gem5 exit code: $CODE  (0 = finished, 124 = hit the wall-clock limit, i.e. hung)" \
+            | tee "$OUT/exit_code.txt"
+
+      - name: Summary
+        if: always()
+        working-directory: gem5
+        run: |
+          OUT=m5out/${{ matrix.test }}
+          cat "$OUT/exit_code.txt" 2>/dev/null || true
+          echo "==== program output (last 40 lines) ===="
+          tail -n 40 "$OUT/simout.txt" 2>/dev/null || true
+          echo "==== gem5 stderr (last 15 lines) ===="
+          tail -n 15 "$OUT/simerr.txt" 2>/dev/null || true
+          echo "==== key stats ===="
+          grep -E "simTicks|simInsts|hostSeconds|numCycles|\.ipc|packets_received::total|average_packet_latency|average_hops" \
+            "$OUT/stats.txt" 2>/dev/null | head -n 40 || true
+          cp "$GITHUB_WORKSPACE/data/ekf_gem5.txt" "$OUT/" 2>/dev/null || true
+
+      - name: Upload m5out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5out-${{ matrix.test }}
+          path: gem5/m5out/${{ matrix.test }}
