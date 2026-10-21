@@ -1,0 +1,108 @@
+# .github/workflows/sims-round3.yml
+# Round 3: slam_mc with the audio worker (GCC-PHAT direction of arrival) on its own core.
+# CPUs = 1 main (filter) + vision workers + 1 audio. 2x4.py supports at most 4 CPUs.
+# Compare with round 2: audio_3cpu_mesh vs mc_2cpu_mesh, audio_4cpu_mesh vs mc_3cpu_mesh
+# (same number of vision workers, one extra core for audio).
+name: gem5 sims round 3 (audio worker)
+
+on:
+  workflow_dispatch:
+    inputs:
+      frames:
+        description: "Frames to simulate (KIMG file has 10)"
+        default: "10"
+      ds:
+        description: "Image downsample factor (2 = 621x187)"
+        default: "2"
+      audio:
+        description: "KAUD clip (path in repo)"
+        default: "data/audio_0005.kaud"
+
+permissions:
+  contents: read
+
+jobs:
+  sim:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 200
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: audio_3cpu_mesh       # main + 1 vision + audio
+            cpus: 3
+            vision: 1
+            topo: CustomMesh
+          - name: audio_4cpu_mesh       # main + 2 vision + audio
+            cpus: 4
+            vision: 2
+            topo: CustomMesh
+          - name: audio_4cpu_crossbar
+            cpus: 4
+            vision: 2
+            topo: Crossbar
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gem5 runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libprotobuf-dev libgoogle-perftools-dev \
+            python3-dev libpng-dev libhdf5-serial-dev zlib1g-dev
+
+      - name: Get gem5 configs (v25.1.0.0) and prebuilt gem5.opt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 --branch v25.1.0.0 https://github.com/gem5/gem5.git
+          gh release download gem5-v25.1-x86-host -p 'gem5-x86host-chi.tar.gz' \
+            --repo "$GITHUB_REPOSITORY"
+          mkdir -p gem5/build/ARM
+          tar xzf gem5-x86host-chi.tar.gz -C gem5/build/ARM
+
+      - name: Build project ARM binaries (Makefile, Docker Ubuntu 20.04)
+        run: make slam_mc_arm64
+
+      - name: Run simulation
+        working-directory: gem5
+        run: |
+          P=$GITHUB_WORKSPACE
+          OUT=m5out/${{ matrix.name }}
+          mkdir -p "$OUT"
+          if [ "${{ matrix.topo }}" = "CustomMesh" ]; then
+            TOPO="--topology=CustomMesh --chi-config=configs/example/noc_config/2x4.py"
+          else
+            TOPO="--topology=Crossbar"
+          fi
+          echo "cpus=${{ matrix.cpus }} vision_threads=${{ matrix.vision }} audio_threads=1 topo=${{ matrix.topo }}" \
+            | tee "$OUT/run_info.txt"
+          set +e
+          timeout 190m ./build/ARM/gem5.opt -re -d "$OUT" configs/deprecated/example/se.py \
+            --cpu-type=ArmMinorCPU --num-cpus=${{ matrix.cpus }} \
+            --ruby --network=garnet $TOPO --maxtime=0.5 \
+            --cmd=$P/slam_mc_arm64 \
+            --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads ${{ matrix.vision }} --frames ${{ inputs.frames }} --ds ${{ inputs.ds }} --audio $P/${{ inputs.audio }} --verbose"
+          CODE=$?
+          echo "gem5 exit code: $CODE  (0 = finished, 124 = hit the wall-clock limit, i.e. hung)" \
+            | tee "$OUT/exit_code.txt"
+
+      - name: Summary
+        if: always()
+        working-directory: gem5
+        run: |
+          OUT=m5out/${{ matrix.name }}
+          cat "$OUT/run_info.txt" "$OUT/exit_code.txt" 2>/dev/null || true
+          echo "==== program output (results only) ===="
+          grep -vE "^\[(m|a|w[0-9]+)\]" "$OUT/simout.txt" 2>/dev/null | tail -n 45 || true
+          echo "==== gem5 stderr (last 10 lines) ===="
+          tail -n 10 "$OUT/simerr.txt" 2>/dev/null || true
+          echo "==== key stats ===="
+          grep -E "simTicks|simInsts|hostSeconds|numCycles|\.ipc |packets_received::total|average_packet_latency|average_hops|average_packet_queueing_latency|average_packet_network_latency" \
+            "$OUT/stats.txt" 2>/dev/null | grep -v commitStats | head -n 45 || true
+
+      - name: Upload m5out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5out-${{ matrix.name }}
+          path: gem5/m5out/${{ matrix.name }}
