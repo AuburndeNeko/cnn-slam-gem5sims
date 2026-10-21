@@ -9,3 +9,5 @@ slam_mc
 Archive/visual-odometry-KITTI/
 .idea/
 __pycache__/
+data_int8/depth_cache*/
+audio_test

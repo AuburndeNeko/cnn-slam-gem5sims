@@ -25,6 +25,7 @@
 #include "ekf.hpp"
 #include "ukf.hpp"
 #include "vision.hpp"
+#include "audio.hpp"
 
 #ifdef USE_M5OPS
 #include <gem5/m5ops.h>
@@ -124,6 +125,12 @@ struct Pool {
     FlagBarrier start, done;
     volatile int frame = -1; volatile bool stop = false;
     int y0(int t) const { return (int)((long)I->h * t / W); }
+    // audio (optional): one extra thread on barrier slot W, 10 hops per video frame
+    const audio::Clip *A = nullptr;
+    std::unique_ptr<audio::GccPhat> doa;
+    std::vector<audio::Doa> ares;           // per hop
+    std::vector<double> aud_ms;             // per frame, audio compute time
+    int hops_per_frame = 10;
 };
 struct WorkerArg { Pool *P; int t; };
 
@@ -145,14 +152,38 @@ static void *worker(void *a_) {
     return nullptr;
 }
 
+// Audio work for video frame k: GCC-PHAT direction of arrival on hops [10k, 10k+10)
+static void audio_frame(Pool &P, int k) {
+    double t0 = now_ms();
+    uint32_t h0 = (uint32_t)k * P.hops_per_frame;
+    uint32_t h1 = std::min<uint32_t>(h0 + P.hops_per_frame, P.A->n_hops());
+    for (uint32_t h = h0; h < h1; ++h) P.ares[h] = P.doa->process(P.A->hop_ptr(h));
+    P.aud_ms[k] = now_ms() - t0;
+}
+
+static void *audio_worker(void *a_) {
+    WorkerArg *a = (WorkerArg *)a_; Pool &P = *a->P; int t = a->t;   // t == P.W (its barrier slot)
+    unsigned ph = 0;
+    for (;;) {
+        ++ph;
+        P.start.worker_wait(t, ph);
+        if (P.stop) break;
+        int k = P.frame;
+        if (k >= 0) audio_frame(P, k);
+        std::printf("[a] audio done, frame %d\n", k);
+        P.done.worker_wait(t, ph);
+    }
+    return nullptr;
+}
+
 static void usage(const char *p) {
     std::printf("usage: %s --data seq.bin --images seq_img.bin [--threads W] [--frames N]\n"
-                "          [--filter ekf|ukf] [--ds 1|2] [--period-ms 100] [--verbose]\n", p);
+                "          [--filter ekf|ukf] [--ds 1|2] [--period-ms 100] [--audio clip.kaud] [--verbose]\n", p);
 }
 
 int main(int argc, char **argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);   // print immediately (no buffering), so progress shows in gem5
-    const char *data = nullptr, *images = nullptr, *filt = "ekf";
+    const char *data = nullptr, *images = nullptr, *filt = "ekf", *audio_path = nullptr;
     int W = 1, frames = 0, ds = 1; bool verbose = false; double period = 100.0;
     for (int i = 1; i < argc; ++i) {
         auto nxt = [&]() -> const char * { if (i + 1 >= argc) { usage(argv[0]); std::exit(1); } return argv[++i]; };
@@ -163,6 +194,7 @@ int main(int argc, char **argv) {
         else if (!std::strcmp(argv[i], "--filter")) filt = nxt();
         else if (!std::strcmp(argv[i], "--ds")) ds = std::atoi(nxt());
         else if (!std::strcmp(argv[i], "--period-ms")) period = std::atof(nxt());
+        else if (!std::strcmp(argv[i], "--audio")) audio_path = nxt();
         else if (!std::strcmp(argv[i], "--verbose")) verbose = true;
         else { usage(argv[0]); return 1; }
     }
@@ -172,22 +204,39 @@ int main(int argc, char **argv) {
     if (!D.load(data, frames, err, sizeof err)) { std::fprintf(stderr, "data: %s\n", err); return 1; }
     if (!I.load(images, frames, ds, err, sizeof err)) { std::fprintf(stderr, "images: %s\n", err); return 1; }
     const int n = (int)std::min<uint32_t>(D.n, I.n);
+    audio::Clip AC; const bool use_audio = audio_path != nullptr;
+    if (use_audio) {
+        if (!audio::load_kaud(audio_path, AC)) return 1;
+        if (AC.n_hops() < (uint32_t)n * 10)
+            std::printf("warning: audio has %u hops, %d frames need %d; later frames get no audio\n",
+                        AC.n_hops(), n, n * 10);
+    }
+    const int NA = (use_audio && W > 0) ? 1 : 0;     // audio threads (0 in sequential mode)
 
     std::printf("--- CNN-SLAM multi-core workload (%s, %s) ---\n", filt, REAL_NAME);
-    std::printf("frames=%d  image=%ux%u (ds=%d)  vision_threads=%d  filter_thread=main  cpus_needed=%d\n",
-                n, I.w, I.h, ds, W, W + 1);
+    std::printf("frames=%d  image=%ux%u (ds=%d)  vision_threads=%d  audio_threads=%d  filter_thread=main  cpus_needed=%d\n",
+                n, I.w, I.h, ds, W, NA, W + 1 + NA);
+    if (use_audio)
+        std::printf("audio: %u Hz, %u hops, win %u, spacing %.3f m\n", AC.fs, AC.n_hops(), AC.win, AC.spacing);
 
     FilterStage FS(D, filt);
     Pool P; P.W = W > 0 ? W : 1; P.I = &I;
     P.vp.fy = (float)(D.fy / ds); P.vp.cy = (float)(D.cy / ds);   // calibration for ground model
     P.scratch.resize(P.W); P.out.resize(P.W);
     for (int t = 0; t < P.W; ++t) P.scratch[t].reserve(P.y0(t + 1) - P.y0(t) + 6, I.w);
-    std::vector<WorkerArg> args(W);
+    if (use_audio) {                                 // allocate everything before the timed loop
+        P.A = &AC;
+        P.doa.reset(new audio::GccPhat(AC.win, AC.fs, AC.spacing));
+        P.ares.assign((size_t)n * P.hops_per_frame, audio::Doa{0, 0.f, 0.f, 0.f});
+        P.aud_ms.assign(n, 0.0);
+    }
+    std::vector<WorkerArg> args(W + NA);
     if (W > 0) {
-        P.start.init(W);
-        P.done.init(W);
-        P.tid.resize(W);
+        P.start.init(W + NA);                        // barrier slots: 0..W-1 vision, W audio
+        P.done.init(W + NA);
+        P.tid.resize(W + NA);
         for (int t = 0; t < W; ++t) { args[t] = {&P, t}; pthread_create(&P.tid[t], nullptr, worker, &args[t]); }
+        if (NA) { args[W] = {&P, W}; pthread_create(&P.tid[W], nullptr, audio_worker, &args[W]); }
     }
 
     std::vector<VisionOut> vres(n);
@@ -199,6 +248,7 @@ int main(int argc, char **argv) {
         for (int k = 0; k < n; ++k) {
             double t0 = now_ms();
             vision_strip(I.g(k), I.d(k), I.w, I.h, 0, I.h, P.vp, P.scratch[0], vres[k]);
+            if (use_audio) audio_frame(P, k);
             FS.step(k);
             double t1 = now_ms();
             step_ms.push_back(t1 - t0); lat[k] = t1 - t0;
@@ -242,6 +292,16 @@ int main(int argc, char **argv) {
         if (verbose)
             std::printf("frame %3d  corners=%5d  hazard=%s (%d/%d/%d px)  latency=%.3f ms\n", k, v.corners, flags,
                         v.hazard_px[0], v.hazard_px[1], v.hazard_px[2], lat[k]);
+        if (verbose && use_audio) {
+            int act = 0; double az = 0;
+            for (int j = 0; j < P.hops_per_frame; ++j) {
+                const audio::Doa &d = P.ares[(size_t)k * P.hops_per_frame + j];
+                if (d.active) { ++act; az += d.az_deg; }
+            }
+            if (act) az /= act;
+            std::printf("           audio: %d/%d hops active  az=%6.1f deg  sector=%c  time=%.3f ms\n",
+                        act, P.hops_per_frame, az, act ? audio::sector((float)az) : '-', P.aud_ms[k]);
+        }
     }
     double smax = 0, ssum = 0, lmax = 0, lsum = 0;
     for (double x : step_ms) { ssum += x; if (x > smax) smax = x; }
@@ -251,6 +311,16 @@ int main(int argc, char **argv) {
                 corners, (double)corners / n, haz_frames, n, cks);
     std::printf("filter: updates=%ld rejected=%ld  final=(%.3f, %.3f, %.3f)  GT=(%.3f, %.3f, %.3f)\n",
                 FS.n_upd, FS.n_rej, (double)FS.st.p.x, (double)FS.st.p.y, (double)FS.st.p.z, L.gt[3], L.gt[7], L.gt[11]);
+    if (use_audio) {
+        int act = 0, sec[3] = {0, 0, 0}; double lag_sum = 0, asum = 0, amax = 0;
+        for (const audio::Doa &d : P.ares) {
+            act += d.active; lag_sum += d.lag;
+            if (d.active) { char c = audio::sector(d.az_deg); sec[c == 'L' ? 0 : (c == 'C' ? 1 : 2)]++; }
+        }
+        for (int k = 0; k < n; ++k) { asum += P.aud_ms[k]; if (P.aud_ms[k] > amax) amax = P.aud_ms[k]; }
+        std::printf("audio: hops=%zu active=%d (L/C/R %d/%d/%d)  lag_sum=%.4f  time/frame mean=%.3f max=%.3f ms\n",
+                    P.ares.size(), act, sec[0], sec[1], sec[2], lag_sum, asum / n, amax);
+    }
     std::printf("timing (simulated in gem5): total=%.3f ms  step mean=%.3f max=%.3f ms  "
                 "frame latency mean=%.3f max=%.3f ms\n", t_total, ssum / step_ms.size(), smax, lsum / n, lmax);
     std::printf("throughput=%.1f fps  deadline %.0f ms: %s (worst latency %.1f%% of budget)\n",
