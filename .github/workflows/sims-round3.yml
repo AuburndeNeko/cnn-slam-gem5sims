@@ -1,7 +1,8 @@
 # .github/workflows/sims-round3.yml
 # Round 3: slam_mc with the audio worker (GCC-PHAT direction of arrival) on its own core.
 # CPUs = 1 main (filter) + vision workers + 1 audio. 2x4.py supports at most 4 CPUs.
-# Compare with round 2: audio_3cpu_mesh vs mc_2cpu_mesh, audio_4cpu_mesh vs mc_3cpu_mesh
+# noaudio_* jobs use the same binary without --audio, for apples-to-apples comparison:
+# audio_3cpu_mesh vs noaudio_2cpu_mesh, audio_4cpu_mesh vs noaudio_3cpu_mesh
 # (same number of vision workers, one extra core for audio).
 name: gem5 sims round 3 (audio worker)
 
@@ -29,17 +30,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: noaudio_2cpu_mesh     # main + 1 vision
+            cpus: 2
+            vision: 1
+            audio: 0
+            topo: CustomMesh
           - name: audio_3cpu_mesh       # main + 1 vision + audio
             cpus: 3
             vision: 1
+            audio: 1
+            topo: CustomMesh
+          - name: noaudio_3cpu_mesh     # main + 2 vision
+            cpus: 3
+            vision: 2
+            audio: 0
             topo: CustomMesh
           - name: audio_4cpu_mesh       # main + 2 vision + audio
             cpus: 4
             vision: 2
+            audio: 1
             topo: CustomMesh
           - name: audio_4cpu_crossbar
             cpus: 4
             vision: 2
+            audio: 1
             topo: Crossbar
     steps:
       - uses: actions/checkout@v4
@@ -74,14 +88,16 @@ jobs:
           else
             TOPO="--topology=Crossbar"
           fi
-          echo "cpus=${{ matrix.cpus }} vision_threads=${{ matrix.vision }} audio_threads=1 topo=${{ matrix.topo }}" \
+          AUD=""
+          if [ "${{ matrix.audio }}" = "1" ]; then AUD="--audio $P/${{ inputs.audio }}"; fi
+          echo "cpus=${{ matrix.cpus }} vision_threads=${{ matrix.vision }} audio_threads=${{ matrix.audio }} topo=${{ matrix.topo }}" \
             | tee "$OUT/run_info.txt"
           set +e
           timeout 190m ./build/ARM/gem5.opt -re -d "$OUT" configs/deprecated/example/se.py \
             --cpu-type=ArmMinorCPU --num-cpus=${{ matrix.cpus }} \
             --ruby --network=garnet $TOPO --maxtime=0.5 \
             --cmd=$P/slam_mc_arm64 \
-            --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads ${{ matrix.vision }} --frames ${{ inputs.frames }} --ds ${{ inputs.ds }} --audio $P/${{ inputs.audio }} --verbose"
+            --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads ${{ matrix.vision }} --frames ${{ inputs.frames }} --ds ${{ inputs.ds }} $AUD --verbose"
           CODE=$?
           echo "gem5 exit code: $CODE  (0 = finished, 124 = hit the wall-clock limit, i.e. hung)" \
             | tee "$OUT/exit_code.txt"

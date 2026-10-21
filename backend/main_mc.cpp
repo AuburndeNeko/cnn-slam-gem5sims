@@ -142,11 +142,9 @@ static void *worker(void *a_) {
         P.start.worker_wait(t, ph);
         if (P.stop) break;
         int k = P.frame;
-        std::printf("[w%d] released, frame %d\n", t, k);
         if (k >= 0)
             vision_strip(P.I->g(k), P.I->d(k), P.I->w, P.I->h, P.y0(t), P.y0(t + 1), P.vp,
                          P.scratch[t], P.out[t]);
-        std::printf("[w%d] vision done\n", t);
         P.done.worker_wait(t, ph);
     }
     return nullptr;
@@ -170,7 +168,6 @@ static void *audio_worker(void *a_) {
         if (P.stop) break;
         int k = P.frame;
         if (k >= 0) audio_frame(P, k);
-        std::printf("[a] audio done, frame %d\n", k);
         P.done.worker_wait(t, ph);
     }
     return nullptr;
