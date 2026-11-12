@@ -2,6 +2,7 @@
 //
 //   slam_mc --data seq.bin --images seq_img.bin [--threads W] [--frames N]
 //           [--filter ekf|ukf] [--ds 1|2] [--verbose]
+//           [--audio clip.kaud] [--accel-duty PCT] [--accel-period-us US]
 //
 // Threads (needs W+1 simulated CPUs in gem5 SE mode):
 //   main thread      : EKF/UKF back-end on frame k-1
@@ -10,6 +11,8 @@
 // Each "step" runs both stages concurrently and ends at a barrier, so a frame
 // enters vision at step k and leaves the filter at step k+1 (2-stage pipeline).
 // --threads 0 runs everything sequentially on one core (baseline, no pipeline).
+// --accel-duty PCT (> 0) adds one more thread, the accelerator proxy
+// (accel_proxy.hpp), started last so gem5 places it on the last CPU.
 //
 // Timing uses clock_gettime, which gem5 SE answers with *simulated* time,
 // so the reported latencies are on the simulated chip.
@@ -26,6 +29,7 @@
 #include "ukf.hpp"
 #include "vision.hpp"
 #include "audio.hpp"
+#include "accel_proxy.hpp"
 
 #ifdef USE_M5OPS
 #include <gem5/m5ops.h>
@@ -175,13 +179,15 @@ static void *audio_worker(void *a_) {
 
 static void usage(const char *p) {
     std::printf("usage: %s --data seq.bin --images seq_img.bin [--threads W] [--frames N]\n"
-                "          [--filter ekf|ukf] [--ds 1|2] [--period-ms 100] [--audio clip.kaud] [--verbose]\n", p);
+                "          [--filter ekf|ukf] [--ds 1|2] [--period-ms 100] [--audio clip.kaud] [--verbose]\n"
+                "          [--accel-duty PCT] [--accel-period-us 1000]\n", p);
 }
 
 int main(int argc, char **argv) {
     setvbuf(stdout, nullptr, _IONBF, 0);   // print immediately (no buffering), so progress shows in gem5
     const char *data = nullptr, *images = nullptr, *filt = "ekf", *audio_path = nullptr;
     int W = 1, frames = 0, ds = 1; bool verbose = false; double period = 100.0;
+    double accel_duty = 0.0, accel_period_us = 1000.0;   // accelerator proxy (off by default)
     for (int i = 1; i < argc; ++i) {
         auto nxt = [&]() -> const char * { if (i + 1 >= argc) { usage(argv[0]); std::exit(1); } return argv[++i]; };
         if (!std::strcmp(argv[i], "--data")) data = nxt();
@@ -192,6 +198,8 @@ int main(int argc, char **argv) {
         else if (!std::strcmp(argv[i], "--ds")) ds = std::atoi(nxt());
         else if (!std::strcmp(argv[i], "--period-ms")) period = std::atof(nxt());
         else if (!std::strcmp(argv[i], "--audio")) audio_path = nxt();
+        else if (!std::strcmp(argv[i], "--accel-duty")) accel_duty = std::atof(nxt());
+        else if (!std::strcmp(argv[i], "--accel-period-us")) accel_period_us = std::atof(nxt());
         else if (!std::strcmp(argv[i], "--verbose")) verbose = true;
         else { usage(argv[0]); return 1; }
     }
@@ -209,10 +217,12 @@ int main(int argc, char **argv) {
                         AC.n_hops(), n, n * 10);
     }
     const int NA = (use_audio && W > 0) ? 1 : 0;     // audio threads (0 in sequential mode)
+    const int NP = (accel_duty > 0.0) ? 1 : 0;       // accelerator proxy thread
 
     std::printf("--- CNN-SLAM multi-core workload (%s, %s) ---\n", filt, REAL_NAME);
-    std::printf("frames=%d  image=%ux%u (ds=%d)  vision_threads=%d  audio_threads=%d  filter_thread=main  cpus_needed=%d\n",
-                n, I.w, I.h, ds, W, NA, W + 1 + NA);
+    std::printf("frames=%d  image=%ux%u (ds=%d)  vision_threads=%d  audio_threads=%d  accel_proxy_threads=%d  "
+                "filter_thread=main  cpus_needed=%d\n",
+                n, I.w, I.h, ds, W, NA, NP, W + 1 + NA + NP);
     if (use_audio)
         std::printf("audio: %u Hz, %u hops, win %u, spacing %.3f m\n", AC.fs, AC.n_hops(), AC.win, AC.spacing);
 
@@ -234,6 +244,13 @@ int main(int argc, char **argv) {
         P.tid.resize(W + NA);
         for (int t = 0; t < W; ++t) { args[t] = {&P, t}; pthread_create(&P.tid[t], nullptr, worker, &args[t]); }
         if (NA) { args[W] = {&P, W}; pthread_create(&P.tid[W], nullptr, audio_worker, &args[W]); }
+    }
+    // Accelerator proxy: created LAST, so gem5 places it on the last CPU
+    // (cpu4 = router 3 with 2x4_accel.py when W = 2 and audio is on).
+    AccelProxyArgs acc; pthread_t acc_tid;
+    if (NP) {
+        acc.duty_pct = accel_duty; acc.period_us = accel_period_us;
+        pthread_create(&acc_tid, nullptr, accel_proxy_thread, &acc);
     }
 
     std::vector<VisionOut> vres(n);
@@ -276,6 +293,11 @@ int main(int argc, char **argv) {
     }
     double t_total = now_ms() - t_all;
     ROI_END();
+    if (NP) {                                        // stop the proxy; no pthread_join (see above)
+        acc.stop.v.store(1, std::memory_order_release);
+        while (acc.finished.v.load(std::memory_order_acquire) == 0) { /* spin */ }
+        accel_proxy_report(acc);
+    }
 
     // ---------------------------------------------------------- report
     long corners = 0; uint32_t cks = 0; int haz_frames = 0;

@@ -1,0 +1,84 @@
+
+7. Printing statistics.
+
+=== $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe ===
+
+   Number of wires:               2219
+   Number of wire bits:           2495
+   Number of public wires:           8
+   Number of public wire bits:      67
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               1034
+     AND2_X1                        57
+     AND3_X1                        35
+     AND4_X1                         5
+     AOI21_X1                       84
+     AOI22_X1                       32
+     DFF_X1                         48
+     INV_X1                         72
+     NAND2_X1                       99
+     NAND3_X1                       14
+     NAND4_X1                        4
+     NOR2_X1                       148
+     NOR3_X1                        19
+     NOR4_X1                         6
+     OAI21_X1                       85
+     OAI22_X1                        3
+     OR2_X1                         27
+     OR3_X1                         30
+     XNOR2_X1                      162
+     XOR2_X1                       104
+
+   Chip area for module '$paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe': 1335.586000
+
+=== systolic_os ===
+
+   Number of wires:                  8
+   Number of wire bits:            899
+   Number of public wires:           8
+   Number of public wire bits:     899
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 16
+     $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe     16
+
+   Area for cell type $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe is unknown!
+
+=== design hierarchy ===
+
+   systolic_os                       1
+     $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe     16
+
+   Number of wires:              35512
+   Number of wire bits:          40819
+   Number of public wires:         136
+   Number of public wire bits:    1971
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:              16544
+     AND2_X1                       912
+     AND3_X1                       560
+     AND4_X1                        80
+     AOI21_X1                     1344
+     AOI22_X1                      512
+     DFF_X1                        768
+     INV_X1                       1152
+     NAND2_X1                     1584
+     NAND3_X1                      224
+     NAND4_X1                       64
+     NOR2_X1                      2368
+     NOR3_X1                       304
+     NOR4_X1                        96
+     OAI21_X1                     1360
+     OAI22_X1                       48
+     OR2_X1                        432
+     OR3_X1                        480
+     XNOR2_X1                     2592
+     XOR2_X1                      1664
+
+   Chip area for top module '\systolic_os': 21369.376000
+

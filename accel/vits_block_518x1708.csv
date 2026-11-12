@@ -1,0 +1,7 @@
+Layer,M,N,K,
+qkv,4515,1152,384,
+attn_scores,4515,4515,64,
+attn_values,4515,64,4515,
+out_proj,4515,384,384,
+mlp_up,4515,1536,384,
+mlp_down,4515,384,1536,

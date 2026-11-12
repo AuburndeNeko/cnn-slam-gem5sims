@@ -20,7 +20,11 @@ slam_mc: backend/main_mc.cpp $(HDR)
 slam_mc_arm64: backend/main_mc.cpp $(HDR)
 	$(XC) "$(XINSTALL) && aarch64-linux-gnu-g++ $(CXXFLAGS) -static -pthread -DSLAM_MAX_LM=$(MAX_LM) backend/main_mc.cpp -o $@"
 
+# ViT non-matmul benchmark (softmax, LayerNorm, GELU) for gem5
+nonmatmul_arm64: bench/nonmatmul_bench.c
+	$(XC) "$(XINSTALL) && aarch64-linux-gnu-gcc -O3 -static bench/nonmatmul_bench.c -o $@ -lm"
+ 
 clean:
-	rm -f slam slam_arm64 slam_mc slam_mc_arm64
+	rm -f slam slam_arm64 slam_mc slam_mc_arm64 nonmatmul_arm64
 
 .PHONY: all clean

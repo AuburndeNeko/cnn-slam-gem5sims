@@ -1,0 +1,7 @@
+model size (MB): fp32 99.3  int8 35.6
+frame   0: mean rel diff 0.0716  median 0.0564  delta1 agreement 0.9827  time fp32 9.36s int8 9.30s
+frame  38: mean rel diff 0.0488  median 0.0405  delta1 agreement 0.9937  time fp32 8.99s int8 8.64s
+frame  76: mean rel diff 0.0833  median 0.0797  delta1 agreement 0.9743  time fp32 10.98s int8 10.12s
+frame 114: mean rel diff 0.0322  median 0.0152  delta1 agreement 0.9868  time fp32 9.86s int8 8.97s
+frame 152: mean rel diff 0.0230  median 0.0153  delta1 agreement 0.9992  time fp32 10.01s int8 9.60s
+SUMMARY over 5 frames: mean rel diff 0.0518  avg time fp32 9.84s  int8 9.32s  speedup 1.06x

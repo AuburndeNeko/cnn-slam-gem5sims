@@ -19,6 +19,9 @@ class CnnDepth:
                  threads=None):
         self.model_id = model_id
         self.input_hw = input_hw          # must be multiples of 14 for ViT patches
+        self.int8 = os.environ.get('CNN_INT8', '0') == '1'
+        if self.int8 and cache_dir:
+            cache_dir = cache_dir.rstrip('/') + '_int8'
         self.cache_dir = cache_dir
         self._model = None
         self.threads = threads
@@ -34,6 +37,10 @@ class CnnDepth:
         self._torch = torch
         self._proc = AutoImageProcessor.from_pretrained(self.model_id)
         self._model = AutoModelForDepthEstimation.from_pretrained(self.model_id).eval()
+        if self.int8:
+            self._model = torch.ao.quantization.quantize_dynamic(
+                self._model, {torch.nn.Linear}, dtype=torch.qint8)
+            print('[cnn_depth] INT8 dynamic quantization ON (nn.Linear layers)')
 
     def __call__(self, bgr, key=None):
         if self.cache_dir and key is not None:

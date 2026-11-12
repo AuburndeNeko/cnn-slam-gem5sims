@@ -1,0 +1,60 @@
+
+5. Printing statistics.
+
+=== $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe ===
+
+   Number of wires:               1043
+   Number of wire bits:           1319
+   Number of public wires:           8
+   Number of public wire bits:      67
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:               1108
+     $_ANDNOT_                     351
+     $_AND_                         61
+     $_NAND_                        46
+     $_NOR_                         33
+     $_NOT_                         47
+     $_ORNOT_                       18
+     $_OR_                         134
+     $_SDFF_PP0_                    48
+     $_XNOR_                        97
+     $_XOR_                        273
+
+=== systolic_os ===
+
+   Number of wires:                  8
+   Number of wire bits:            899
+   Number of public wires:           8
+   Number of public wire bits:     899
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:                 16
+     $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe     16
+
+=== design hierarchy ===
+
+   systolic_os                       1
+     $paramod$7c9ec1e69d4739cf557d890a73c608534f90944c\pe     16
+
+   Number of wires:              16696
+   Number of wire bits:          22003
+   Number of public wires:         136
+   Number of public wire bits:    1971
+   Number of memories:               0
+   Number of memory bits:            0
+   Number of processes:              0
+   Number of cells:              17728
+     $_ANDNOT_                    5616
+     $_AND_                        976
+     $_NAND_                       736
+     $_NOR_                        528
+     $_NOT_                        752
+     $_ORNOT_                      288
+     $_OR_                        2144
+     $_SDFF_PP0_                   768
+     $_XNOR_                      1552
+     $_XOR_                       4368
+

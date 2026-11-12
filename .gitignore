@@ -11,3 +11,14 @@ Archive/visual-odometry-KITTI/
 __pycache__/
 data_int8/depth_cache*/
 audio_test
+# SCALE-Sim, CACTI, OpenROAD clone and their outputs
+venv_scalesim/
+SCALE-Sim/
+cacti/
+ORFS/
+accel/results/
+# RTL: cell library and compiled simulations
+rtl/*.lib
+rtl/sim*
+# Python caches
+__pycache__/
