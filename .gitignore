@@ -22,3 +22,8 @@ rtl/*.lib
 rtl/sim*
 # Python caches
 __pycache__/
+monodepth2/
+data_0002/
+data_lidar/
+data_md2/
+data_md2_0002/

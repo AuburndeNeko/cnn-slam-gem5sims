@@ -16,6 +16,8 @@ Run from inside the SCALE-Sim folder (its default layout path is relative):
 
 Merged reports end up in <results>/<run_name>/, with LayerID = row number in
 the topology CSV (0 = first layer), exactly like a normal SCALE-Sim run.
+
+A fifth argument conv selects convolution topologies.
 """
 import os
 import re
@@ -28,9 +30,12 @@ REPORTS = ['COMPUTE_REPORT.csv', 'BANDWIDTH_REPORT.csv', 'DETAILED_ACCESS_REPORT
 
 
 def main():
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         sys.exit(__doc__)
     cfg_path, topo_path, out_dir = sys.argv[1:4]
+    mode = sys.argv[4] if len(sys.argv) == 5 else 'gemm'
+    if mode not in ('gemm', 'conv'):
+        sys.exit(f'mode must be gemm or conv, got {mode}')
     runner = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'run_scalesim.py')
     if not os.path.exists(runner):
         sys.exit(f'run_scalesim.py not found next to this script ({runner})')
@@ -74,7 +79,7 @@ def main():
 
         print(f'[layers] {idx} {name}: running ...', flush=True)
         t0 = time.time()
-        result = subprocess.run([sys.executable, runner, cfg_i, topo_i, tmp_dir])
+        result = subprocess.run([sys.executable, runner, cfg_i, topo_i, tmp_dir, mode])
         if result.returncode != 0:
             sys.exit(f'[layers] {idx} {name} failed (exit {result.returncode}). '
                      f'Fix the cause and rerun the same command to resume.')

@@ -16,7 +16,11 @@ DEFAULT_MODEL = 'depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf'
 
 class CnnDepth:
     def __init__(self, model_id=DEFAULT_MODEL, input_hw=(518, 1708), cache_dir=None,
-                 threads=None):
+                 threads=None, backend='dav2', md2_repo=None, md2_weights=None):
+        self.backend = backend
+        self.md2_repo, self.md2_weights = md2_repo, md2_weights
+        if backend == 'monodepth2':
+            model_id = 'monodepth2:' + os.path.basename(md2_weights.rstrip('/'))
         self.model_id = model_id
         self.input_hw = input_hw          # must be multiples of 14 for ViT patches
         self.int8 = os.environ.get('CNN_INT8', '0') == '1'
@@ -35,6 +39,10 @@ class CnnDepth:
         if self.threads:
             torch.set_num_threads(self.threads)
         self._torch = torch
+        if self.backend == 'monodepth2':
+            from monodepth2_depth import Monodepth2Depth
+            self._model = Monodepth2Depth(self.md2_repo, self.md2_weights)
+            return
         self._proc = AutoImageProcessor.from_pretrained(self.model_id)
         self._model = AutoModelForDepthEstimation.from_pretrained(self.model_id).eval()
         if self.int8:
@@ -52,6 +60,13 @@ class CnnDepth:
         torch = self._torch
         H, W = bgr.shape[:2]
         rgb = np.ascontiguousarray(bgr[:, :, ::-1])
+        if self.backend == 'monodepth2':
+            t0 = time.time()
+            depth = self._model.predict(rgb)
+            self.infer_times.append(time.time() - t0)
+            if self.cache_dir and key is not None:
+                np.save(path, depth.astype(np.float16))
+            return depth
         inputs = self._proc(images=rgb, return_tensors='pt',
                             size={'height': self.input_hw[0], 'width': self.input_hw[1]},
                             keep_aspect_ratio=False)

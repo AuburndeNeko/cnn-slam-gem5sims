@@ -1,0 +1,191 @@
+Cache size                    : 65536
+Block size                    : 32
+Associativity                 : 1
+Read only ports               : 0
+Write only ports              : 0
+Read write ports              : 1
+Single ended read ports       : 0
+Cache banks (UCA)             : 1
+Technology                    : 0.045
+Temperature                   : 360
+Tag size                      : 42
+array type                    : Scratch RAM
+Model as memory               : 0
+Model as 3D memory       	 : 0
+Access mode                   : 0
+Data array cell type          : 1
+Data array peripheral type    : 1
+Tag array cell type           : 0
+Tag array peripheral type     : 0
+Optimization target           : 2
+Design objective (UCA wt)     : 0 0 0 100 0
+Design objective (UCA dev)    : 20 100000 100000 100000 100000
+Cache model                   : 0
+Nuca bank                     : 0
+Wire inside mat               : 1
+Wire outside mat              : 1
+Interconnect projection       : 1
+Wire signaling               : 1
+Print level                   : 1
+ECC overhead                  : 0
+Page size                     : 8192
+Burst length                  : 8
+Internal prefetch width       : 8
+Force cache config            : 0
+Subarray Driver direction       : 1
+iostate                       : WRITE
+dram_ecc                      : NO_ECC
+io_type                     : DDR3
+dram_dimm                      : UDIMM
+IO Area (sq.mm) = inf
+IO Timing Margin (ps) = -14.1667
+IO Votlage Margin (V) = 0.155
+IO Dynamic Power (mW) = 1506.36 PHY Power (mW) = 232.752 PHY Wakeup Time (us) = 27.503
+IO Termination and Bias Power (mW) = 2505.96
+
+---------- CACTI (version 7.0.3DD Prerelease of Aug, 2012), Uniform Cache Access SRAM Model ----------
+
+Cache Parameters:
+    Total cache size (bytes): 65536
+    Number of banks: 1
+    Associativity: direct mapped
+    Block size (bytes): 32
+    Read/write Ports: 1
+    Read ports: 0
+    Write ports: 0
+    Technology size (nm): 45
+
+    Access time (ns): 1.56867
+    Cycle time (ns):  1.89315
+    Total dynamic read energy per access (nJ): 0.0517987
+    Total dynamic write energy per access (nJ): 0.0662387
+    Total leakage power of a bank (mW): 0.0149471
+    Total gate leakage power of a bank (mW): 0.000498615
+    Cache height x width (mm): 0.395039 x 0.503602
+
+    Best Ndwl : 2
+    Best Ndbl : 2
+    Best Nspd : 4
+    Best Ndcm : 8
+    Best Ndsam L1 : 1
+    Best Ndsam L2 : 1
+
+    Data array, H-tree wire type: Global wires with 30% delay penalty
+
+Time Components:
+
+  Data side (with Output driver) (ns): 1.56867
+	H-tree input delay (ns): 0
+	Decoder + wordline delay (ns): 0.8661
+	Bitline delay (ns): 0.495572
+	Sense Amplifier delay (ns): 0.00900145
+	H-tree output delay (ns): 0.198001
+
+
+Power Components:
+
+  Data array: Total dynamic read energy/access  (nJ): 0.0517987
+	Total energy in H-tree (that includes both address and data transfer) (nJ): 0
+	Output Htree inside bank Energy (nJ): 0
+	Decoder (nJ): 0.000350834
+	Wordline (nJ): 0.000681178
+	Bitline mux & associated drivers (nJ): 0.000408924
+	Sense amp mux & associated drivers (nJ): 0
+	Bitlines precharge and equalization circuit (nJ): 0.00461889
+	Bitlines (nJ): 0.0211209
+	Sense amplifier energy (nJ): 0.000562134
+	Sub-array output driver (nJ): 0.0240558
+	Total leakage power of a bank (mW): 0.0149471
+	Total leakage power in H-tree (that includes both address and data network) ((mW)): 0
+	Total leakage power in cells (mW): 0
+	Total leakage power in row logic(mW): 0
+	Total leakage power in column logic(mW): 0
+	Total gate leakage power in H-tree (that includes both address and data network) ((mW)): 0
+
+
+Area Components:
+
+  Data array: Area (mm2): 0.198942
+	Height (mm): 0.395039
+	Width (mm): 0.503602
+	Area efficiency (Memory cell area/Total area) - 77.9149 %
+		MAT Height (mm): 0.395039
+		MAT Length (mm): 0.503602
+		Subarray Height (mm): 0.168192
+		Subarray Length (mm): 0.2412
+
+Wire Properties:
+
+  Delay Optimal
+	Repeater size - 92.3563 
+	Repeater spacing - 0.210387 (mm) 
+	Delay - 0.333852 (ns/mm) 
+	PowerD - 0.000721673 (nJ/mm) 
+	PowerL - 6.8432e-06 (mW/mm) 
+	PowerLgate - 4.98501e-07 (mW/mm)
+	Wire width - 0.045 microns
+	Wire spacing - 0.045 microns
+
+  5% Overhead
+	Repeater size - 53.3563 
+	Repeater spacing - 0.310387 (mm) 
+	Delay - 0.349839 (ns/mm) 
+	PowerD - 0.000471249 (nJ/mm) 
+	PowerL - 2.67975e-06 (mW/mm) 
+	PowerLgate - 1.9521e-07 (mW/mm)
+	Wire width - 0.045 microns
+	Wire spacing - 0.045 microns
+
+  10% Overhead
+	Repeater size - 43.3563 
+	Repeater spacing - 0.310387 (mm) 
+	Delay - 0.365398 (ns/mm) 
+	PowerD - 0.000430665 (nJ/mm) 
+	PowerL - 2.17751e-06 (mW/mm) 
+	PowerLgate - 1.58624e-07 (mW/mm)
+	Wire width - 0.045 microns
+	Wire spacing - 0.045 microns
+
+  20% Overhead
+	Repeater size - 39.3563 
+	Repeater spacing - 0.410387 (mm) 
+	Delay - 0.399728 (ns/mm) 
+	PowerD - 0.000404027 (nJ/mm) 
+	PowerL - 1.49497e-06 (mW/mm) 
+	PowerLgate - 1.08903e-07 (mW/mm)
+	Wire width - 0.045 microns
+	Wire spacing - 0.045 microns
+
+  30% Overhead
+	Repeater size - 31.3563 
+	Repeater spacing - 0.410387 (mm) 
+	Delay - 0.43133 (ns/mm) 
+	PowerD - 0.000375659 (nJ/mm) 
+	PowerL - 1.19109e-06 (mW/mm) 
+	PowerLgate - 8.67662e-08 (mW/mm)
+	Wire width - 0.045 microns
+	Wire spacing - 0.045 microns
+
+  Low-swing wire (1 mm) - Note: Unlike repeated wires, 
+	delay and power values of low-swing wires do not
+	have a linear relationship with length. 
+	delay - 0.398005 (ns) 
+	powerD - 6.28078e-06 (nJ) 
+	PowerL - 1.56467e-10 (mW) 
+	PowerLgate - 2.06022e-11 (mW)
+	Wire width - 9e-08 microns
+	Wire spacing - 9e-08 microns
+
+
+top 3 best memory configurations are:
+Memory    cap: 80 GB num_bobs: 1 bw: 533 (MHz) cost: $731.2 energy: 32.6101 (nJ) 
+ {
+ (0)  BoB       cap: 80 GB num_channels: 1 bw: 533 (MHz) cost: $731.2 energy: 32.6101 (nJ) 
+    ==============
+    (0) cap: 80 GB bw: 533 (MHz) cost: $731.2 dpc: 3 energy: 32.6101 (nJ)  DIMM:  RDIMM  low power: F [ 0(4GB) 0(8GB) 1(16GB) 2(32GB) 0(64GB) ]
+    ==============
+
+ }
+
+=============================================
+

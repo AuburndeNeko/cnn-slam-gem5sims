@@ -1,0 +1,2 @@
+Tech node (nm), Capacity (bytes), Number of banks, Associativity, Output width (bits), Access time (ns), Random cycle time (ns), Dynamic search energy (nJ), Dynamic read energy (nJ), Dynamic write energy (nJ), Standby leakage per bank(mW), Area (mm2), Ndwl, Ndbl, Nspd, Ndcm, Ndsam_level_1, Ndsam_level_2, Data arrary area efficiency %, Ntwl, Ntbl, Ntspd, Ntcm, Ntsam_level_1, Ntsam_level_2, Tag arrary area efficiency %, 
+45, 524288, 1, 1, 512, 1.62564, 2.31086, N/A, 0.210601, 0.239643, 35.8105, 2.24412, 2, 8, 4, 8, 1, 1, 55.2574, N/A, N/A, N/A, N/A, N/A, N/A, N/A, 

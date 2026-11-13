@@ -31,6 +31,18 @@ def bilinear(D, pts):
     return cv2.remap(D, x.reshape(-1, 1), y.reshape(-1, 1), cv2.INTER_LINEAR,
                      borderMode=cv2.BORDER_CONSTANT, borderValue=0).ravel()
 
+def densify_lidar(L, radius=3.0):
+    """Nearest valid LiDAR depth within `radius` px; NaN elsewhere.
+    NaN fails the dmin/dmax tests, so those pixels are simply not used."""
+    L = L.astype(np.float32)
+    hole = (L <= 1e-3).astype(np.uint8)
+    dist, labels = cv2.distanceTransformWithLabels(
+        hole, cv2.DIST_L2, 5, labelType=cv2.DIST_LABEL_PIXEL)
+    lut = np.zeros(labels.max() + 1, np.float32)
+    lut[labels[hole == 0]] = L[hole == 0]
+    dense = lut[labels]
+    dense[dist > radius] = np.nan
+    return dense
 
 class Tracker:
     """Pyramidal KLT with forward-backward check and replenishment."""
@@ -142,6 +154,9 @@ def main():
     ap.add_argument('--dmax', type=float, default=40.0)
     ap.add_argument('--depth-source', choices=['cnn', 'lidar'], default='cnn')
     ap.add_argument('--cnn-input', default='518x1708', help='HxW, multiples of 14')
+    ap.add_argument('--model', choices=['dav2', 'monodepth2'], default='dav2')
+    ap.add_argument('--md2-repo', default='monodepth2')
+    ap.add_argument('--md2-weights', default='monodepth2/models/mono+stereo_640x192')
     ap.add_argument('--eval-depth-every', type=int, default=10)
     args = ap.parse_args()
 
@@ -153,7 +168,16 @@ def main():
           f'fx={seq.fx:.2f} cx={seq.cx:.2f} cy={seq.cy:.2f}')
 
     H, W = [int(x) for x in args.cnn_input.split('x')]
-    cnn = CnnDepth(input_hw=(H, W), cache_dir=os.path.join(args.out, f'depth_cache_{H}x{W}'))
+    if args.model == 'monodepth2':
+        # input size is fixed by the weights; folder name ends in WxH (e.g. ..._640x192)
+        W, H = [int(x) for x in
+                os.path.basename(args.md2_weights.rstrip('/')).split('_')[-1].split('x')]
+        cnn = CnnDepth(backend='monodepth2', md2_repo=args.md2_repo,
+                       md2_weights=args.md2_weights, input_hw=(H, W),
+                       cache_dir=os.path.join(args.out, f'depth_cache_md2_{H}x{W}'))
+    else:
+        cnn = CnnDepth(input_hw=(H, W),
+                       cache_dir=os.path.join(args.out, f'depth_cache_{H}x{W}'))
     trk = Tracker()
 
     bin_path = os.path.join(args.out, f'{tag}.bin')
@@ -169,7 +193,8 @@ def main():
     for k in range(n):
         img = seq.image(k)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        D = cnn(img, key=f'{k:010d}') if args.depth_source == 'cnn' else seq.lidar_depth(k)
+        D = (cnn(img, key=f'{k:010d}') if args.depth_source == 'cnn'
+             else densify_lidar(seq.lidar_depth(k)))
 
         prev_ids, prev_pts = trk.step(gray)
 
