@@ -1,0 +1,3491 @@
+{
+ "net": "dav2",
+ "desc": "depth-anything/Depth-Anything-V2-Metric-Outdoor-Small-hf",
+ "height": 518,
+ "width": 1708,
+ "summary": {
+  "matmul": {
+   "elems": 1779970032,
+   "elems_from_mm": 0,
+   "macs": 320771275008,
+   "n": 129
+  },
+  "move": {
+   "elems": 31206144,
+   "elems_from_mm": 20805120,
+   "macs": 0,
+   "n": 18
+  },
+  "const": {
+   "elems": 1733376,
+   "elems_from_mm": 0,
+   "macs": 0,
+   "n": 1
+  },
+  "residual": {
+   "elems": 61618624,
+   "elems_from_mm": 59884864,
+   "macs": 0,
+   "n": 35
+  },
+  "layernorm": {
+   "elems": 48545280,
+   "elems_from_mm": 0,
+   "macs": 0,
+   "n": 28
+  },
+  "fold": {
+   "elems": 1510231184,
+   "elems_from_mm": 1510231184,
+   "macs": 0,
+   "n": 37
+  },
+  "softmax": {
+   "elems": 1467736200,
+   "elems_from_mm": 1467736200,
+   "macs": 0,
+   "n": 12
+  },
+  "act": {
+   "elems": 136832648,
+   "elems_from_mm": 130765832,
+   "macs": 0,
+   "n": 28
+  },
+  "upsample_bilinear": {
+   "elems": 52867968,
+   "elems_from_mm": 28311808,
+   "macs": 0,
+   "n": 5
+  }
+ },
+ "ops": [
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1733376,
+   "macs": 1019225088,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "upsample_bicubic2d",
+   "cat": "const",
+   "elems": 1733376,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 122311350,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 122311350,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "_softmax",
+   "cat": "softmax",
+   "elems": 122311350,
+   "row_len": 4515,
+   "from_mm": true,
+   "shape": [
+    1,
+    6,
+    4515,
+    4515
+   ]
+  },
+  {
+   "op": "bmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 7827926400,
+   "from_mm": false,
+   "shape": [
+    6,
+    4515,
+    64
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    6,
+    64
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 665763840,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 6935040,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "gelu",
+   "cat": "act",
+   "elems": 6935040,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    1536
+   ]
+  },
+  {
+   "op": "addmm",
+   "cat": "matmul",
+   "elems": 1733760,
+   "macs": 2663055360,
+   "from_mm": false,
+   "shape": [
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1733760,
+   "from_mm": true,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "native_layer_norm",
+   "cat": "layernorm",
+   "elems": 1733760,
+   "row_len": 384,
+   "from_mm": false,
+   "shape": [
+    1,
+    4515,
+    384
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733376,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 216672,
+   "macs": 83202048,
+   "from_mm": false,
+   "shape": [
+    1,
+    48,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 3466752,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    48,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733376,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 433344,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    96,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1733376,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    96,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733376,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 866688,
+   "macs": 332808192,
+   "from_mm": false,
+   "shape": [
+    1,
+    192,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "clone",
+   "cat": "move",
+   "elems": 1733376,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1733376,
+   "macs": 665616384,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 445056,
+   "macs": 1538113536,
+   "from_mm": false,
+   "shape": [
+    1,
+    384,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 1996849152,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 998424576,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 499212288,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 74176,
+   "macs": 256352256,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 74176,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 74176,
+   "macs": 42725376,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 74176,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 74176,
+   "macs": 42725376,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 74176,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    19,
+    61
+   ]
+  },
+  {
+   "op": "upsample_bilinear2d",
+   "cat": "upsample_bilinear",
+   "elems": 288896,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 18489344,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 288896,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 288896,
+   "macs": 166404096,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 288896,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    37,
+    122
+   ]
+  },
+  {
+   "op": "upsample_bilinear2d",
+   "cat": "upsample_bilinear",
+   "elems": 1155584,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 73957376,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 665616384,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 665616384,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 1155584,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 665616384,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1155584,
+   "macs": 665616384,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 1155584,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    74,
+    244
+   ]
+  },
+  {
+   "op": "upsample_bilinear2d",
+   "cat": "upsample_bilinear",
+   "elems": 4622336,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 295829504,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 2662465536,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 2662465536,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 4622336,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 2662465536,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 4622336,
+   "macs": 2662465536,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "add",
+   "cat": "residual",
+   "elems": 4622336,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    148,
+    488
+   ]
+  },
+  {
+   "op": "upsample_bilinear2d",
+   "cat": "upsample_bilinear",
+   "elems": 18489344,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    296,
+    976
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 18489344,
+   "macs": 1183318016,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    296,
+    976
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 9244672,
+   "macs": 5324931072,
+   "from_mm": false,
+   "shape": [
+    1,
+    32,
+    296,
+    976
+   ]
+  },
+  {
+   "op": "upsample_bilinear2d",
+   "cat": "upsample_bilinear",
+   "elems": 28311808,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    518,
+    1708
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 28311808,
+   "macs": 8153800704,
+   "from_mm": false,
+   "shape": [
+    1,
+    32,
+    518,
+    1708
+   ]
+  },
+  {
+   "op": "relu",
+   "cat": "act",
+   "elems": 28311808,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    518,
+    1708
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 884744,
+   "macs": 28311808,
+   "from_mm": false,
+   "shape": [
+    1,
+    1,
+    518,
+    1708
+   ]
+  },
+  {
+   "op": "sigmoid",
+   "cat": "act",
+   "elems": 884744,
+   "from_mm": true,
+   "shape": [
+    1,
+    1,
+    518,
+    1708
+   ]
+  },
+  {
+   "op": "mul",
+   "cat": "fold",
+   "elems": 884744,
+   "from_mm": true,
+   "shape": [
+    1,
+    1,
+    518,
+    1708
+   ]
+  }
+ ],
+ "unknown": {}
+}

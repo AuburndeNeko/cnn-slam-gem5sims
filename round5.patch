@@ -1,0 +1,356 @@
+diff --git a/.github/workflows/sims-round5.yml b/.github/workflows/sims-round5.yml
+new file mode 100644
+index 0000000..c40a8ff
+--- /dev/null
++++ b/.github/workflows/sims-round5.yml
+@@ -0,0 +1,110 @@
++# .github/workflows/sims-round5.yml
++# Round 5: PEAK accelerator load (closes the gap left by round 4).
++# Round 4's strongest proxy (1 thread, 100% duty) reached only ~0.98 GB/s, and a single in-order
++# core cannot go faster. The Monodepth2 accelerator streams ~1.8 GB/s while it is busy (48.8 MB in
++# ~27 ms at 360 MHz), so this round uses TWO proxy threads (cpu4 on router 3, cpu5 on router 7).
++# All jobs use gem5_accel/2x4_accel6.py and --num-cpus=6, so the layout is identical across jobs:
++#  - base6:         main + 2 vision + audio, proxies off (baseline on the 6-CPU layout)
++#  - accel1_100:    1 proxy, 100% duty (~0.98 GB/s; sanity check against round 4)
++#  - accel2_100:    2 proxies, 100% duty (~1.9 GB/s sustained; the peak case)
++# The proxy load is held for the WHOLE run, so it is an upper bound on duration as well as rate.
++name: gem5 sims round 5 (peak accelerator load)
++
++on:
++  workflow_dispatch:
++    inputs:
++      frames:
++        description: "Frames to simulate (KIMG file has 10)"
++        default: "10"
++      ds:
++        description: "Image downsample factor (2 = 621x187)"
++        default: "2"
++      audio:
++        description: "KAUD clip (path in repo)"
++        default: "data/audio_0005.kaud"
++
++permissions:
++  contents: read
++
++jobs:
++  sim:
++    runs-on: ubuntu-24.04
++    timeout-minutes: 355
++    strategy:
++      fail-fast: false
++      matrix:
++        include:
++          - name: r5_base6
++            proxies: 0
++          - name: r5_accel1_100
++            proxies: 1
++          - name: r5_accel2_100
++            proxies: 2
++    steps:
++      - uses: actions/checkout@v4
++
++      - name: Install gem5 runtime libraries
++        run: |
++          sudo apt-get update
++          sudo apt-get install -y libprotobuf-dev libgoogle-perftools-dev \
++            python3-dev libpng-dev libhdf5-serial-dev zlib1g-dev python3-pydot graphviz
++
++      - name: Get gem5 configs (v25.1.0.0) and prebuilt gem5.opt
++        env:
++          GH_TOKEN: ${{ github.token }}
++        run: |
++          git clone --depth 1 --branch v25.1.0.0 https://github.com/gem5/gem5.git
++          gh release download gem5-v25.1-x86-host -p 'gem5-x86host-chi.tar.gz' \
++            --repo "$GITHUB_REPOSITORY"
++          mkdir -p gem5/build/ARM
++          tar xzf gem5-x86host-chi.tar.gz -C gem5/build/ARM
++          cp gem5_accel/2x4_accel6.py gem5/configs/example/noc_config/
++
++      - name: Build project ARM binaries (Makefile, Docker Ubuntu 20.04)
++        run: make slam_mc_arm64
++
++      - name: Run simulation
++        working-directory: gem5
++        run: |
++          P=$GITHUB_WORKSPACE
++          OUT=m5out/${{ matrix.name }}
++          mkdir -p "$OUT"
++          TOPO="--topology=CustomMesh --chi-config=configs/example/noc_config/2x4_accel6.py"
++          AUD="--audio $P/${{ inputs.audio }}"
++          ACC=""
++          if [ "${{ matrix.proxies }}" != "0" ]; then
++            ACC="--accel-duty 100 --accel-period-us 1000 --accel-threads ${{ matrix.proxies }}"
++          fi
++          echo "cpus=6 vision_threads=2 proxies=${{ matrix.proxies }} duty=100" | tee "$OUT/run_info.txt"
++          set +e
++          timeout 345m ./build/ARM/gem5.opt -re -d "$OUT" configs/deprecated/example/se.py \
++            --cpu-type=ArmMinorCPU --num-cpus=6 \
++            --ruby --network=garnet $TOPO --maxtime=0.5 \
++            --cmd=$P/slam_mc_arm64 \
++            --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads 2 --frames ${{ inputs.frames }} --ds ${{ inputs.ds }} $AUD $ACC --verbose"
++          CODE=$?
++          echo "gem5 exit code: $CODE  (0 = finished, 124 = hit the wall-clock limit)" \
++            | tee "$OUT/exit_code.txt"
++
++      - name: Summary
++        if: always()
++        working-directory: gem5
++        run: |
++          OUT=m5out/${{ matrix.name }}
++          cat "$OUT/run_info.txt" "$OUT/exit_code.txt" 2>/dev/null || true
++          echo "==== proxy lines ===="
++          grep "\[proxy" "$OUT/simout.txt" 2>/dev/null || true
++          echo "==== program output (results only) ===="
++          grep -vE "^\[(m|a|w[0-9]+|proxy[0-9]*)\]" "$OUT/simout.txt" 2>/dev/null | tail -n 45 || true
++          echo "==== gem5 stderr (last 10 lines) ===="
++          tail -n 10 "$OUT/simerr.txt" 2>/dev/null || true
++          echo "==== key stats ===="
++          grep -E "simTicks|simInsts|hostSeconds|numCycles|\.ipc |packets_received::total|average_packet_latency|average_hops|average_packet_queueing_latency|average_packet_network_latency" \
++            "$OUT/stats.txt" 2>/dev/null | grep -v commitStats | head -n 80 || true
++
++      - name: Upload m5out
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: m5out-${{ matrix.name }}
++          path: gem5/m5out/${{ matrix.name }}
+diff --git a/backend/accel_proxy.hpp b/backend/accel_proxy.hpp
+index a573fa6..a81d4a5 100644
+--- a/backend/accel_proxy.hpp
++++ b/backend/accel_proxy.hpp
+@@ -13,6 +13,8 @@
+ // each sit on their own 64-byte cache line, and it is never pthread_join'ed
+ // (thread-exit wake-ups are unreliable in gem5 SE mode).
+ //
++// Several proxies can run at once (--accel-threads N in main_mc.cpp): proxy k lands on cpu(4+k).
++//
+ // Start it with pthread_create AFTER all other worker threads, so that gem5
+ // places it on the last CPU (cpu4 = router 3 with 2x4_accel.py).
+ //
+@@ -32,6 +34,7 @@ struct alignas(64) AccelProxyFlag {
+ 
+ struct AccelProxyArgs {
+     double period_us  = 1000.0;   // one busy + idle cycle
++    int    id         = 0;         // proxy number (0 = cpu4, 1 = cpu5, ...)
+     double duty_pct   = 0.0;      // percent of each period spent streaming
+     size_t buffer_mib = 64;       // streamed input buffer (output buffer = 1/4 of this)
+     AccelProxyFlag stop;          // written only by the main thread
+@@ -67,8 +70,8 @@ inline void *accel_proxy_thread(void *p)
+     const uint64_t period = (uint64_t)(a.period_us * 1e3);
+     const uint64_t busy   = (uint64_t)(period * a.duty_pct / 100.0);
+     const uint64_t t0     = accel_proxy_now_ns();
+-    std::printf("[proxy] start: period %.1f us, duty %.0f%%, buffers %zu + %zu MiB\n",
+-                a.period_us, a.duty_pct, a.buffer_mib, a.buffer_mib / 4);
++    std::printf("[proxy%d] start: period %.1f us, duty %.0f%%, buffers %zu + %zu MiB\n",
++                a.id, a.period_us, a.duty_pct, a.buffer_mib, a.buffer_mib / 4);
+ 
+     size_t   ri = 0, wi = 0;
+     int64_t  sum = 0;
+@@ -111,9 +114,9 @@ inline void *accel_proxy_thread(void *p)
+ inline void accel_proxy_report(const AccelProxyArgs &a)
+ {
+     const double mbytes = (a.lines_read + a.lines_written) * 64.0 / 1e6;
+-    std::printf("[proxy] done: %llu periods, %llu lines read, %llu written, %.1f MB in %.3f ms "
++    std::printf("[proxy%d] done: %llu periods, %llu lines read, %llu written, %.1f MB in %.3f ms "
+                 "(%.2f GB/s avg), checksum %lld\n",
+-                (unsigned long long)a.periods, (unsigned long long)a.lines_read,
++                a.id, (unsigned long long)a.periods, (unsigned long long)a.lines_read,
+                 (unsigned long long)a.lines_written, mbytes, a.elapsed_s * 1e3,
+                 a.elapsed_s > 0 ? mbytes / 1e3 / a.elapsed_s : 0.0, (long long)a.checksum);
+ }
+diff --git a/backend/main_mc.cpp b/backend/main_mc.cpp
+index 4f11a5e..8ab9a20 100644
+--- a/backend/main_mc.cpp
++++ b/backend/main_mc.cpp
+@@ -2,7 +2,7 @@
+ //
+ //   slam_mc --data seq.bin --images seq_img.bin [--threads W] [--frames N]
+ //           [--filter ekf|ukf] [--ds 1|2] [--verbose]
+-//           [--audio clip.kaud] [--accel-duty PCT] [--accel-period-us US]
++//           [--audio clip.kaud] [--accel-duty PCT] [--accel-period-us US] [--accel-threads N]
+ //
+ // Threads (needs W+1 simulated CPUs in gem5 SE mode):
+ //   main thread      : EKF/UKF back-end on frame k-1
+@@ -30,6 +30,7 @@
+ #include "vision.hpp"
+ #include "audio.hpp"
+ #include "accel_proxy.hpp"
++static const int MAX_PROXY = 4;
+ 
+ #ifdef USE_M5OPS
+ #include <gem5/m5ops.h>
+@@ -180,7 +181,7 @@ static void *audio_worker(void *a_) {
+ static void usage(const char *p) {
+     std::printf("usage: %s --data seq.bin --images seq_img.bin [--threads W] [--frames N]\n"
+                 "          [--filter ekf|ukf] [--ds 1|2] [--period-ms 100] [--audio clip.kaud] [--verbose]\n"
+-                "          [--accel-duty PCT] [--accel-period-us 1000]\n", p);
++                "          [--accel-duty PCT] [--accel-period-us 1000] [--accel-threads 1]\n", p);
+ }
+ 
+ int main(int argc, char **argv) {
+@@ -188,6 +189,7 @@ int main(int argc, char **argv) {
+     const char *data = nullptr, *images = nullptr, *filt = "ekf", *audio_path = nullptr;
+     int W = 1, frames = 0, ds = 1; bool verbose = false; double period = 100.0;
+     double accel_duty = 0.0, accel_period_us = 1000.0;   // accelerator proxy (off by default)
++    int accel_threads = 1;                                // number of proxy threads (cpu4, cpu5, ...)
+     for (int i = 1; i < argc; ++i) {
+         auto nxt = [&]() -> const char * { if (i + 1 >= argc) { usage(argv[0]); std::exit(1); } return argv[++i]; };
+         if (!std::strcmp(argv[i], "--data")) data = nxt();
+@@ -200,6 +202,7 @@ int main(int argc, char **argv) {
+         else if (!std::strcmp(argv[i], "--audio")) audio_path = nxt();
+         else if (!std::strcmp(argv[i], "--accel-duty")) accel_duty = std::atof(nxt());
+         else if (!std::strcmp(argv[i], "--accel-period-us")) accel_period_us = std::atof(nxt());
++        else if (!std::strcmp(argv[i], "--accel-threads")) accel_threads = std::atoi(nxt());
+         else if (!std::strcmp(argv[i], "--verbose")) verbose = true;
+         else { usage(argv[0]); return 1; }
+     }
+@@ -217,7 +220,9 @@ int main(int argc, char **argv) {
+                         AC.n_hops(), n, n * 10);
+     }
+     const int NA = (use_audio && W > 0) ? 1 : 0;     // audio threads (0 in sequential mode)
+-    const int NP = (accel_duty > 0.0) ? 1 : 0;       // accelerator proxy thread
++    if (accel_threads < 1) accel_threads = 1;
++    if (accel_threads > MAX_PROXY) accel_threads = MAX_PROXY;
++    const int NP = (accel_duty > 0.0) ? accel_threads : 0;   // accelerator proxy threads
+ 
+     std::printf("--- CNN-SLAM multi-core workload (%s, %s) ---\n", filt, REAL_NAME);
+     std::printf("frames=%d  image=%ux%u (ds=%d)  vision_threads=%d  audio_threads=%d  accel_proxy_threads=%d  "
+@@ -247,10 +252,12 @@ int main(int argc, char **argv) {
+     }
+     // Accelerator proxy: created LAST, so gem5 places it on the last CPU
+     // (cpu4 = router 3 with 2x4_accel.py when W = 2 and audio is on).
+-    AccelProxyArgs acc; pthread_t acc_tid;
+-    if (NP) {
+-        acc.duty_pct = accel_duty; acc.period_us = accel_period_us;
+-        pthread_create(&acc_tid, nullptr, accel_proxy_thread, &acc);
++    // (static array: alignas(64) members need real 64-byte alignment, which std::vector
++    //  cannot give in C++14)
++    static AccelProxyArgs acc[MAX_PROXY]; pthread_t acc_tid[MAX_PROXY];
++    for (int k = 0; k < NP; ++k) {
++        acc[k].duty_pct = accel_duty; acc[k].period_us = accel_period_us; acc[k].id = k;
++        pthread_create(&acc_tid[k], nullptr, accel_proxy_thread, &acc[k]);
+     }
+ 
+     std::vector<VisionOut> vres(n);
+@@ -293,10 +300,16 @@ int main(int argc, char **argv) {
+     }
+     double t_total = now_ms() - t_all;
+     ROI_END();
+-    if (NP) {                                        // stop the proxy; no pthread_join (see above)
+-        acc.stop.v.store(1, std::memory_order_release);
+-        while (acc.finished.v.load(std::memory_order_acquire) == 0) { /* spin */ }
+-        accel_proxy_report(acc);
++    for (int k = 0; k < NP; ++k) acc[k].stop.v.store(1, std::memory_order_release);   // stop all proxies first,
++    for (int k = 0; k < NP; ++k) {                   // then wait for each; no pthread_join (see above)
++        while (acc[k].finished.v.load(std::memory_order_acquire) == 0) { /* spin */ }
++        accel_proxy_report(acc[k]);
++    }
++    if (NP > 1) {
++        double gb = 0;
++        for (int k = 0; k < NP; ++k)
++            if (acc[k].elapsed_s > 0) gb += (acc[k].lines_read + acc[k].lines_written) * 64.0 / 1e9 / acc[k].elapsed_s;
++        std::printf("[proxy] total over %d proxy threads: %.2f GB/s avg\n", NP, gb);
+     }
+ 
+     // ---------------------------------------------------------- report
+diff --git a/gem5_accel/2x4_accel6.py b/gem5_accel/2x4_accel6.py
+new file mode 100644
+index 0000000..6289d65
+--- /dev/null
++++ b/gem5_accel/2x4_accel6.py
+@@ -0,0 +1,95 @@
++# Copyright (c) 2021 ARM Limited
++# All rights reserved.
++#
++# The license below extends only to copyright in the software and shall
++# not be construed as granting a license to any other intellectual
++# property including but not limited to intellectual property relating
++# to a hardware implementation of the functionality of the software
++# licensed hereunder.  You may use the software subject to the license
++# terms below provided that you ensure that this notice is replicated
++# unmodified and in its entirety in all distributions of the software,
++# modified or unmodified, in source code or in binary form.
++#
++# Redistribution and use in source and binary forms, with or without
++# modification, are permitted provided that the following conditions are
++# met: redistributions of source code must retain the above copyright
++# notice, this list of conditions and the following disclaimer;
++# redistributions in binary form must reproduce the above copyright
++# notice, this list of conditions and the following disclaimer in the
++# documentation and/or other materials provided with the distribution;
++# neither the name of the copyright holders nor the names of its
++# contributors may be used to endorse or promote products derived from
++# this software without specific prior written permission.
++#
++# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++# Modified for the CNN-SLAM project (round 5): identical to 2x4.py except that a fifth and sixth
++# CPU (RN-F) is placed on router 3, which is otherwise unused in SE mode.
++# The fifth CPU runs accel_proxy, a stand-in for the systolic-array accelerator.
++
++from ruby import CHI_config
++
++
++# CustomMesh parameters for a 2x4 mesh. Routers will have the following layout:
++#
++# 0 --- 1 --- 2 --- 3
++# |     |     |     |
++# 4 --- 5 --- 6 --- 7
++#
++# Default parameter are configs/ruby/CHI_config.py
++#
++class NoC_Params(CHI_config.NoC_Params):
++    num_rows = 2
++    num_cols = 4
++
++
++# Specialization of nodes to define bindings for each CHI node type
++# needed by CustomMesh.
++# The default types are defined in CHI_Node and their derivatives in
++# configs/ruby/CHI_config.py
++
++
++class CHI_RNF(CHI_config.CHI_RNF):
++    class NoC_Params(CHI_config.CHI_RNF.NoC_Params):
++        # cpu0..cpu3 as in 2x4.py; cpu4 (accelerator proxy 0) on router 3, cpu5 (proxy 1) on router 7
++        router_list = [1, 2, 5, 6, 3, 7]
++
++
++class CHI_HNF(CHI_config.CHI_HNF):
++    class NoC_Params(CHI_config.CHI_HNF.NoC_Params):
++        router_list = [1, 2, 5, 6]
++
++
++class CHI_MN(CHI_config.CHI_MN):
++    class NoC_Params(CHI_config.CHI_MN.NoC_Params):
++        router_list = [4]
++
++
++class CHI_SNF_MainMem(CHI_config.CHI_SNF_MainMem):
++    class NoC_Params(CHI_config.CHI_SNF_MainMem.NoC_Params):
++        router_list = [0, 4]
++
++
++class CHI_SNF_BootMem(CHI_config.CHI_SNF_BootMem):
++    class NoC_Params(CHI_config.CHI_SNF_BootMem.NoC_Params):
++        router_list = [3]
++
++
++class CHI_RNI_DMA(CHI_config.CHI_RNI_DMA):
++    class NoC_Params(CHI_config.CHI_RNI_DMA.NoC_Params):
++        router_list = [7]
++
++
++class CHI_RNI_IO(CHI_config.CHI_RNI_IO):
++    class NoC_Params(CHI_config.CHI_RNI_IO.NoC_Params):
++        router_list = [7]

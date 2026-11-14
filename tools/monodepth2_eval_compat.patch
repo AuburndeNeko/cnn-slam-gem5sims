@@ -1,0 +1,98 @@
+diff --git a/datasets/mono_dataset.py b/datasets/mono_dataset.py
+index a381934..900c2d6 100644
+--- a/datasets/mono_dataset.py
++++ b/datasets/mono_dataset.py
+@@ -54,7 +54,7 @@ class MonoDataset(data.Dataset):
+         self.height = height
+         self.width = width
+         self.num_scales = num_scales
+-        self.interp = Image.ANTIALIAS
++        self.interp = Image.LANCZOS
+ 
+         self.frame_idxs = frame_idxs
+ 
+diff --git a/evaluate_depth.py b/evaluate_depth.py
+index 7746ef9..8fbd99a 100644
+--- a/evaluate_depth.py
++++ b/evaluate_depth.py
+@@ -5,6 +5,7 @@ import cv2
+ import numpy as np
+ 
+ import torch
++DEV = "cuda" if torch.cuda.is_available() else "cpu"
+ from torch.utils.data import DataLoader
+ 
+ from layers import disp_to_depth
+@@ -78,11 +79,11 @@ def evaluate(opt):
+         encoder_path = os.path.join(opt.load_weights_folder, "encoder.pth")
+         decoder_path = os.path.join(opt.load_weights_folder, "depth.pth")
+ 
+-        encoder_dict = torch.load(encoder_path)
++        encoder_dict = torch.load(encoder_path, map_location=DEV)
+ 
+         dataset = datasets.KITTIRAWDataset(opt.data_path, filenames,
+                                            encoder_dict['height'], encoder_dict['width'],
+-                                           [0], 4, is_train=False)
++                                           [0], 4, is_train=False, img_ext='.png' if opt.png else '.jpg')
+         dataloader = DataLoader(dataset, 16, shuffle=False, num_workers=opt.num_workers,
+                                 pin_memory=True, drop_last=False)
+ 
+@@ -91,11 +92,11 @@ def evaluate(opt):
+ 
+         model_dict = encoder.state_dict()
+         encoder.load_state_dict({k: v for k, v in encoder_dict.items() if k in model_dict})
+-        depth_decoder.load_state_dict(torch.load(decoder_path))
++        depth_decoder.load_state_dict(torch.load(decoder_path, map_location=DEV))
+ 
+-        encoder.cuda()
++        encoder.to(DEV)
+         encoder.eval()
+-        depth_decoder.cuda()
++        depth_decoder.to(DEV)
+         depth_decoder.eval()
+ 
+         pred_disps = []
+@@ -105,7 +106,7 @@ def evaluate(opt):
+ 
+         with torch.no_grad():
+             for data in dataloader:
+-                input_color = data[("color", 0, 0)].cuda()
++                input_color = data[("color", 0, 0)].to(DEV)
+ 
+                 if opt.post_process:
+                     # Post-processed results require each image to have two forward passes
+@@ -163,7 +164,7 @@ def evaluate(opt):
+         quit()
+ 
+     gt_path = os.path.join(splits_dir, opt.eval_split, "gt_depths.npz")
+-    gt_depths = np.load(gt_path, fix_imports=True, encoding='latin1')["data"]
++    gt_depths = np.load(gt_path, fix_imports=True, encoding="latin1", allow_pickle=True)["data"]
+ 
+     print("-> Evaluating")
+ 
+diff --git a/export_gt_depth.py b/export_gt_depth.py
+index 4263b74..dbd37fc 100644
+--- a/export_gt_depth.py
++++ b/export_gt_depth.py
+@@ -58,7 +58,7 @@ def export_gt_depths_kitti():
+ 
+     print("Saving to {}".format(opt.split))
+ 
+-    np.savez_compressed(output_path, data=np.array(gt_depths))
++    np.savez_compressed(output_path, data=np.array(gt_depths, dtype=object))
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/kitti_utils.py b/kitti_utils.py
+index ac2fdc9..ba617b0 100644
+--- a/kitti_utils.py
++++ b/kitti_utils.py
+@@ -83,7 +83,7 @@ def generate_depth_map(calib_dir, velo_filename, cam=2, vel_depth=False):
+ 
+     # project to image
+     depth = np.zeros((im_shape[:2]))
+-    depth[velo_pts_im[:, 1].astype(np.int), velo_pts_im[:, 0].astype(np.int)] = velo_pts_im[:, 2]
++    depth[velo_pts_im[:, 1].astype(int), velo_pts_im[:, 0].astype(int)] = velo_pts_im[:, 2]
+ 
+     # find the duplicate points and choose the closest depth
+     inds = sub2ind(depth.shape, velo_pts_im[:, 1], velo_pts_im[:, 0])

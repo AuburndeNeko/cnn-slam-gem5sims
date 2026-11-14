@@ -1,0 +1,1411 @@
+{
+ "net": "md2",
+ "desc": "Monodepth2 ResNet-18 (scales=[0])",
+ "height": 192,
+ "width": 640,
+ "summary": {
+  "fold": {
+   "elems": 6819840,
+   "elems_from_mm": 6082560,
+   "macs": 0,
+   "n": 22
+  },
+  "matmul": {
+   "elems": 10967040,
+   "elems_from_mm": 0,
+   "macs": 7998013440,
+   "n": 31
+  },
+  "act": {
+   "elems": 10536960,
+   "elems_from_mm": 8693760,
+   "macs": 0,
+   "n": 28
+  },
+  "pool": {
+   "elems": 491520,
+   "elems_from_mm": 491520,
+   "macs": 0,
+   "n": 1
+  },
+  "residual": {
+   "elems": 1843200,
+   "elems_from_mm": 1843200,
+   "macs": 0,
+   "n": 8
+  },
+  "move": {
+   "elems": 21385088,
+   "elems_from_mm": 7753664,
+   "macs": 0,
+   "n": 21
+  }
+ },
+ "ops": [
+  {
+   "op": "sub",
+   "cat": "fold",
+   "elems": 368640,
+   "from_mm": false,
+   "shape": [
+    1,
+    3,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "div",
+   "cat": "fold",
+   "elems": 368640,
+   "from_mm": false,
+   "shape": [
+    1,
+    3,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1966080,
+   "macs": 289013760,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 1966080,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 1966080,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "max_pool2d_with_indices",
+   "cat": "pool",
+   "elems": 491520,
+   "window": 9,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 15728640,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 15728640,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 15728640,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 61440,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "native_batch_norm",
+   "cat": "fold",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "add_",
+   "cat": "residual",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "relu_",
+   "cat": "act",
+   "elems": 61440,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 90112,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    8,
+    22
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 30720,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 30720,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    6,
+    20
+   ]
+  },
+  {
+   "op": "upsample_nearest2d",
+   "cat": "move",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 245760,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 301056,
+   "from_mm": false,
+   "shape": [
+    1,
+    512,
+    14,
+    42
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 566231040,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 150528,
+   "from_mm": true,
+   "shape": [
+    1,
+    256,
+    14,
+    42
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 61440,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 61440,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    12,
+    40
+   ]
+  },
+  {
+   "op": "upsample_nearest2d",
+   "cat": "move",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 491520,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 545792,
+   "from_mm": false,
+   "shape": [
+    1,
+    256,
+    26,
+    82
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 566231040,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 272896,
+   "from_mm": true,
+   "shape": [
+    1,
+    128,
+    26,
+    82
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    24,
+    80
+   ]
+  },
+  {
+   "op": "upsample_nearest2d",
+   "cat": "move",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 983040,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 1036800,
+   "from_mm": false,
+   "shape": [
+    1,
+    128,
+    50,
+    162
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 566231040,
+   "from_mm": false,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 518400,
+   "from_mm": true,
+   "shape": [
+    1,
+    64,
+    50,
+    162
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 245760,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    32,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 245760,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    48,
+    160
+   ]
+  },
+  {
+   "op": "upsample_nearest2d",
+   "cat": "move",
+   "elems": 983040,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 2949120,
+   "from_mm": false,
+   "shape": [
+    1,
+    96,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 3029376,
+   "from_mm": false,
+   "shape": [
+    1,
+    96,
+    98,
+    322
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 983040,
+   "macs": 849346560,
+   "from_mm": false,
+   "shape": [
+    1,
+    32,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 983040,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 1009792,
+   "from_mm": true,
+   "shape": [
+    1,
+    32,
+    98,
+    322
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 491520,
+   "macs": 141557760,
+   "from_mm": false,
+   "shape": [
+    1,
+    16,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 491520,
+   "from_mm": true,
+   "shape": [
+    1,
+    16,
+    96,
+    320
+   ]
+  },
+  {
+   "op": "upsample_nearest2d",
+   "cat": "move",
+   "elems": 1966080,
+   "from_mm": true,
+   "shape": [
+    1,
+    16,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "cat",
+   "cat": "move",
+   "elems": 1966080,
+   "from_mm": false,
+   "shape": [
+    1,
+    16,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 1992768,
+   "from_mm": false,
+   "shape": [
+    1,
+    16,
+    194,
+    642
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 1966080,
+   "macs": 283115520,
+   "from_mm": false,
+   "shape": [
+    1,
+    16,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "elu_",
+   "cat": "act",
+   "elems": 1966080,
+   "from_mm": true,
+   "shape": [
+    1,
+    16,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "reflection_pad2d",
+   "cat": "move",
+   "elems": 1992768,
+   "from_mm": true,
+   "shape": [
+    1,
+    16,
+    194,
+    642
+   ]
+  },
+  {
+   "op": "convolution",
+   "cat": "matmul",
+   "elems": 122880,
+   "macs": 17694720,
+   "from_mm": false,
+   "shape": [
+    1,
+    1,
+    192,
+    640
+   ]
+  },
+  {
+   "op": "sigmoid",
+   "cat": "act",
+   "elems": 122880,
+   "from_mm": true,
+   "shape": [
+    1,
+    1,
+    192,
+    640
+   ]
+  }
+ ],
+ "unknown": {}
+}
