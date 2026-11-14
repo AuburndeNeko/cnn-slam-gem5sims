@@ -13,6 +13,8 @@
 // each sit on their own 64-byte cache line, and it is never pthread_join'ed
 // (thread-exit wake-ups are unreliable in gem5 SE mode).
 //
+// Several proxies can run at once (--accel-threads N in main_mc.cpp): proxy k lands on cpu(4+k).
+//
 // Start it with pthread_create AFTER all other worker threads, so that gem5
 // places it on the last CPU (cpu4 = router 3 with 2x4_accel.py).
 //
@@ -32,6 +34,7 @@ struct alignas(64) AccelProxyFlag {
 
 struct AccelProxyArgs {
     double period_us  = 1000.0;   // one busy + idle cycle
+    int    id         = 0;         // proxy number (0 = cpu4, 1 = cpu5, ...)
     double duty_pct   = 0.0;      // percent of each period spent streaming
     size_t buffer_mib = 64;       // streamed input buffer (output buffer = 1/4 of this)
     AccelProxyFlag stop;          // written only by the main thread
@@ -67,8 +70,8 @@ inline void *accel_proxy_thread(void *p)
     const uint64_t period = (uint64_t)(a.period_us * 1e3);
     const uint64_t busy   = (uint64_t)(period * a.duty_pct / 100.0);
     const uint64_t t0     = accel_proxy_now_ns();
-    std::printf("[proxy] start: period %.1f us, duty %.0f%%, buffers %zu + %zu MiB\n",
-                a.period_us, a.duty_pct, a.buffer_mib, a.buffer_mib / 4);
+    std::printf("[proxy%d] start: period %.1f us, duty %.0f%%, buffers %zu + %zu MiB\n",
+                a.id, a.period_us, a.duty_pct, a.buffer_mib, a.buffer_mib / 4);
 
     size_t   ri = 0, wi = 0;
     int64_t  sum = 0;
@@ -111,9 +114,9 @@ inline void *accel_proxy_thread(void *p)
 inline void accel_proxy_report(const AccelProxyArgs &a)
 {
     const double mbytes = (a.lines_read + a.lines_written) * 64.0 / 1e6;
-    std::printf("[proxy] done: %llu periods, %llu lines read, %llu written, %.1f MB in %.3f ms "
+    std::printf("[proxy%d] done: %llu periods, %llu lines read, %llu written, %.1f MB in %.3f ms "
                 "(%.2f GB/s avg), checksum %lld\n",
-                (unsigned long long)a.periods, (unsigned long long)a.lines_read,
+                a.id, (unsigned long long)a.periods, (unsigned long long)a.lines_read,
                 (unsigned long long)a.lines_written, mbytes, a.elapsed_s * 1e3,
                 a.elapsed_s > 0 ? mbytes / 1e3 / a.elapsed_s : 0.0, (long long)a.checksum);
 }

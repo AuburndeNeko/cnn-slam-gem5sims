@@ -1,0 +1,110 @@
+# .github/workflows/sims-round5.yml
+# Round 5: PEAK accelerator load (closes the gap left by round 4).
+# Round 4's strongest proxy (1 thread, 100% duty) reached only ~0.98 GB/s, and a single in-order
+# core cannot go faster. The Monodepth2 accelerator streams ~1.8 GB/s while it is busy (48.8 MB in
+# ~27 ms at 360 MHz), so this round uses TWO proxy threads (cpu4 on router 3, cpu5 on router 7).
+# All jobs use gem5_accel/2x4_accel6.py and --num-cpus=6, so the layout is identical across jobs:
+#  - base6:         main + 2 vision + audio, proxies off (baseline on the 6-CPU layout)
+#  - accel1_100:    1 proxy, 100% duty (~0.98 GB/s; sanity check against round 4)
+#  - accel2_100:    2 proxies, 100% duty (~1.9 GB/s sustained; the peak case)
+# The proxy load is held for the WHOLE run, so it is an upper bound on duration as well as rate.
+name: gem5 sims round 5 (peak accelerator load)
+
+on:
+  workflow_dispatch:
+    inputs:
+      frames:
+        description: "Frames to simulate (KIMG file has 10)"
+        default: "10"
+      ds:
+        description: "Image downsample factor (2 = 621x187)"
+        default: "2"
+      audio:
+        description: "KAUD clip (path in repo)"
+        default: "data/audio_0005.kaud"
+
+permissions:
+  contents: read
+
+jobs:
+  sim:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: r5_base6
+            proxies: 0
+          - name: r5_accel1_100
+            proxies: 1
+          - name: r5_accel2_100
+            proxies: 2
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install gem5 runtime libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libprotobuf-dev libgoogle-perftools-dev \
+            python3-dev libpng-dev libhdf5-serial-dev zlib1g-dev python3-pydot graphviz
+
+      - name: Get gem5 configs (v25.1.0.0) and prebuilt gem5.opt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 --branch v25.1.0.0 https://github.com/gem5/gem5.git
+          gh release download gem5-v25.1-x86-host -p 'gem5-x86host-chi.tar.gz' \
+            --repo "$GITHUB_REPOSITORY"
+          mkdir -p gem5/build/ARM
+          tar xzf gem5-x86host-chi.tar.gz -C gem5/build/ARM
+          cp gem5_accel/2x4_accel6.py gem5/configs/example/noc_config/
+
+      - name: Build project ARM binaries (Makefile, Docker Ubuntu 20.04)
+        run: make slam_mc_arm64
+
+      - name: Run simulation
+        working-directory: gem5
+        run: |
+          P=$GITHUB_WORKSPACE
+          OUT=m5out/${{ matrix.name }}
+          mkdir -p "$OUT"
+          TOPO="--topology=CustomMesh --chi-config=configs/example/noc_config/2x4_accel6.py"
+          AUD="--audio $P/${{ inputs.audio }}"
+          ACC=""
+          if [ "${{ matrix.proxies }}" != "0" ]; then
+            ACC="--accel-duty 100 --accel-period-us 1000 --accel-threads ${{ matrix.proxies }}"
+          fi
+          echo "cpus=6 vision_threads=2 proxies=${{ matrix.proxies }} duty=100" | tee "$OUT/run_info.txt"
+          set +e
+          timeout 345m ./build/ARM/gem5.opt -re -d "$OUT" configs/deprecated/example/se.py \
+            --cpu-type=ArmMinorCPU --num-cpus=6 \
+            --ruby --network=garnet $TOPO --maxtime=0.5 \
+            --cmd=$P/slam_mc_arm64 \
+            --options="--data $P/data/2011_09_26_drive_0005.bin --images $P/data/2011_09_26_drive_0005_img10.bin --threads 2 --frames ${{ inputs.frames }} --ds ${{ inputs.ds }} $AUD $ACC --verbose"
+          CODE=$?
+          echo "gem5 exit code: $CODE  (0 = finished, 124 = hit the wall-clock limit)" \
+            | tee "$OUT/exit_code.txt"
+
+      - name: Summary
+        if: always()
+        working-directory: gem5
+        run: |
+          OUT=m5out/${{ matrix.name }}
+          cat "$OUT/run_info.txt" "$OUT/exit_code.txt" 2>/dev/null || true
+          echo "==== proxy lines ===="
+          grep "\[proxy" "$OUT/simout.txt" 2>/dev/null || true
+          echo "==== program output (results only) ===="
+          grep -vE "^\[(m|a|w[0-9]+|proxy[0-9]*)\]" "$OUT/simout.txt" 2>/dev/null | tail -n 45 || true
+          echo "==== gem5 stderr (last 10 lines) ===="
+          tail -n 10 "$OUT/simerr.txt" 2>/dev/null || true
+          echo "==== key stats ===="
+          grep -E "simTicks|simInsts|hostSeconds|numCycles|\.ipc |packets_received::total|average_packet_latency|average_hops|average_packet_queueing_latency|average_packet_network_latency" \
+            "$OUT/stats.txt" 2>/dev/null | grep -v commitStats | head -n 80 || true
+
+      - name: Upload m5out
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5out-${{ matrix.name }}
+          path: gem5/m5out/${{ matrix.name }}
